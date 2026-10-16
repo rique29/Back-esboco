@@ -1,0 +1,153 @@
+# NIX Core — requisições de teste (extensão REST Client: humao.rest-client)
+# Clique em "Send Request" acima de cada bloco, de cima para baixo.
+# O código 2FA é preenchido automaticamente (modo desenvolvimento).
+
+@host = http://localhost:3000
+
+### 0. Saúde da API
+GET {{host}}/health
+
+### 1. Login (etapa 1) — gera o desafio 2FA
+# @name login
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "login": "gestor@nixcore.test", "senha": "Gestor@123" }
+
+### 2. Verificar 2FA (etapa 2) — entrega os tokens
+# @name verify
+POST {{host}}/auth/verify-2fa
+Content-Type: application/json
+
+{
+  "desafio_token": "{{login.response.body.desafio_token}}",
+  "codigo": "{{login.response.body.codigo_dev}}"
+}
+
+### 3. Renovar tokens
+# @name refresh
+POST {{host}}/auth/refresh
+Content-Type: application/json
+
+{ "refresh_token": "{{verify.response.body.refresh_token}}" }
+
+### 4. Registrar usuário (público = sempre OPERADOR)
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "codigo_colaborador": "O100",
+  "nome_completo": "Novo Operador",
+  "email": "novo.operador@nixcore.test",
+  "senha": "Senha1234"
+}
+
+### 5. Registrar GESTOR (precisa estar logado como gerente)
+POST {{host}}/auth/register
+Content-Type: application/json
+Authorization: Bearer {{verify.response.body.access_token}}
+
+{
+  "codigo_colaborador": "G100",
+  "nome_completo": "Novo Gestor",
+  "email": "novo.gestor@nixcore.test",
+  "senha": "Senha1234",
+  "cargo_perfil": "GESTOR"
+}
+
+### ===================== RELATÓRIOS =====================
+
+### 6. Criar relatório
+# @name criarRelatorio
+POST {{host}}/relatorios
+Content-Type: application/json
+Authorization: Bearer {{verify.response.body.access_token}}
+
+{
+  "motorista_principal": "João da Silva",
+  "veiculo": "VW 24.260 Constellation",
+  "placa": "BRA-2041",
+  "data_operacao": "2026-10-14",
+  "hora_registro": "07:30",
+  "regional": "Norte",
+  "qtde_viagens": 3,
+  "horimetro_inicial": 1000,
+  "horimetro_final": 1008.5,
+  "litros_abastecidos": 85.5,
+  "motorista_1": "João da Silva",
+  "hora_motorista_1": "06:00",
+  "coletores": ["Carlos", "Marcos"],
+  "atividades": [
+    { "lado_tabela": "ESQ", "indice_linha": 1, "codigo_atividade": "D", "hora": "06:10", "quilometragem": 12.5 }
+  ],
+  "descargas": [
+    { "numero_descarga": 1, "local_descarga": "Aterro Central", "numero_ticket": "T-001", "peso_kg": 4200.5 },
+    { "numero_descarga": 2, "peso_kg": 3100 }
+  ]
+}
+
+### 7. Listar com filtros (todos opcionais)
+GET {{host}}/relatorios?placa=2041&data_inicio=2026-10-01&data_fim=2026-10-31&pagina=1&limite=20
+Authorization: Bearer {{verify.response.body.access_token}}
+
+### 8. Detalhes completos
+GET {{host}}/relatorios/{{criarRelatorio.response.body.id}}
+Authorization: Bearer {{verify.response.body.access_token}}
+
+### 9. Editar (só os campos enviados; listas enviadas substituem as antigas)
+PUT {{host}}/relatorios/{{criarRelatorio.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{verify.response.body.access_token}}
+
+{ "regional": "Sul", "qtde_viagens": 4 }
+
+### 10. Remover (somente GESTOR)
+DELETE {{host}}/relatorios/{{criarRelatorio.response.body.id}}
+Authorization: Bearer {{verify.response.body.access_token}}
+
+### ===================== VISTORIAS =====================
+
+### 11. Catálogo dos 35 itens do checklist
+GET {{host}}/vistorias/checklist/itens
+Authorization: Bearer {{verify.response.body.access_token}}
+
+### 12. Nova vistoria — tudo conforme (35 itens obrigatórios)
+# @name criarVistoria
+POST {{host}}/vistorias
+Content-Type: application/json
+Authorization: Bearer {{verify.response.body.access_token}}
+
+{
+  "placa": "BRA-2041",
+  "data_vistoria": "2026-10-14",
+  "hora_vistoria": "05:45",
+  "horimetro_km": 120345.5,
+  "observacoes_gerais": "Veículo em bom estado",
+  "respostas": [{"item_id":1,"resultado":"C"},{"item_id":2,"resultado":"C"},{"item_id":3,"resultado":"C"},{"item_id":4,"resultado":"C"},{"item_id":5,"resultado":"C"},{"item_id":6,"resultado":"C"},{"item_id":7,"resultado":"C"},{"item_id":8,"resultado":"C"},{"item_id":9,"resultado":"C"},{"item_id":10,"resultado":"C"},{"item_id":11,"resultado":"C"},{"item_id":12,"resultado":"C"},{"item_id":13,"resultado":"C"},{"item_id":14,"resultado":"C"},{"item_id":15,"resultado":"C"},{"item_id":16,"resultado":"C"},{"item_id":17,"resultado":"C"},{"item_id":18,"resultado":"C"},{"item_id":19,"resultado":"C"},{"item_id":20,"resultado":"C"},{"item_id":21,"resultado":"C"},{"item_id":22,"resultado":"C"},{"item_id":23,"resultado":"C"},{"item_id":24,"resultado":"C"},{"item_id":25,"resultado":"C"},{"item_id":26,"resultado":"C"},{"item_id":27,"resultado":"C"},{"item_id":28,"resultado":"C"},{"item_id":29,"resultado":"C"},{"item_id":30,"resultado":"C"},{"item_id":31,"resultado":"C"},{"item_id":32,"resultado":"C"},{"item_id":33,"resultado":"C"},{"item_id":34,"resultado":"C"},{"item_id":35,"resultado":"C"}]
+}
+
+### 13. Nova vistoria — com item NÃO CONFORME (observação obrigatória)
+POST {{host}}/vistorias
+Content-Type: application/json
+Authorization: Bearer {{verify.response.body.access_token}}
+
+{
+  "placa": "OXK-8812",
+  "data_vistoria": "2026-10-14",
+  "respostas": [{"item_id":1,"resultado":"C"},{"item_id":2,"resultado":"C"},{"item_id":3,"resultado":"C"},{"item_id":4,"resultado":"C"},{"item_id":5,"resultado":"C"},{"item_id":6,"resultado":"C"},{"item_id":7,"resultado":"C"},{"item_id":8,"resultado":"C"},{"item_id":9,"resultado":"C"},{"item_id":10,"resultado":"C"},{"item_id":11,"resultado":"C"},{"item_id":12,"resultado":"C"},{"item_id":13,"resultado":"C"},{"item_id":14,"resultado":"C"},{"item_id":15,"resultado":"NC","observacao":"Freio com ruído"},{"item_id":16,"resultado":"C"},{"item_id":17,"resultado":"C"},{"item_id":18,"resultado":"C"},{"item_id":19,"resultado":"C"},{"item_id":20,"resultado":"C"},{"item_id":21,"resultado":"C"},{"item_id":22,"resultado":"C"},{"item_id":23,"resultado":"C"},{"item_id":24,"resultado":"C"},{"item_id":25,"resultado":"C"},{"item_id":26,"resultado":"C"},{"item_id":27,"resultado":"C"},{"item_id":28,"resultado":"C"},{"item_id":29,"resultado":"C"},{"item_id":30,"resultado":"C"},{"item_id":31,"resultado":"C"},{"item_id":32,"resultado":"C"},{"item_id":33,"resultado":"C"},{"item_id":34,"resultado":"C"},{"item_id":35,"resultado":"C"}]
+}
+
+### 14. Listar vistorias (filtros opcionais)
+GET {{host}}/vistorias?resultado=REPROVADO&placa=OXK&pagina=1&limite=20
+Authorization: Bearer {{verify.response.body.access_token}}
+
+### 15. Detalhes do checklist
+GET {{host}}/vistorias/{{criarVistoria.response.body.id}}
+Authorization: Bearer {{verify.response.body.access_token}}
+
+### 16. Editar vistoria (cabeçalho e/ou checklist completo)
+PUT {{host}}/vistorias/{{criarVistoria.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{verify.response.body.access_token}}
+
+{ "horimetro_km": 120400, "observacoes_gerais": "Revisado após manutenção" }

@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      NODE_ENV: development
+    volumes:
+      - .:/app                # seu código no VS Code aparece dentro do container
+      - /app/node_modules     # mantém as dependências instaladas dentro do container
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # permite o container falar com o Supabase local
