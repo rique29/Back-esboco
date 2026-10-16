@@ -48,5 +48,3 @@ Instale a extensão **REST Client** (humao.rest-client), abra `requests.http` e 
 | `docker compose down -v && docker compose up --build` | Reinstala dependências (após mudar o package.json) |
 | `docker compose logs -f api` | Acompanha o log da API |
 | `docker compose restart api` | Reinicia a API (se o auto-reload não detectar mudanças no Windows) |
->>>>>>> 5673e55 (Update do Back)
-
