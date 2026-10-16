@@ -1,7 +1,5 @@
 # Back-esboco
-<<<<<<< HEAD
-# Back-esboco
-=======
+
 # NIX Core — Backend
 
 API Node.js (Express) + Supabase (Postgres) rodando em Docker.
