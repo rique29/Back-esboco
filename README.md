@@ -4,9 +4,6 @@
 
 API Node.js (Express) + Supabase (Postgres) rodando em Docker.
 
-> A documentação completa (endpoints, modelo de dados, segurança, solução de problemas) está no
-> Claude Doc entregue junto com este projeto. Abaixo, o essencial para rodar.
-
 ## Subir o ambiente do zero
 
 ```bash
